@@ -1,0 +1,5 @@
+cron:
+-   description: timer update schedule
+    url: /run
+    schedule: every 1 minutes
+

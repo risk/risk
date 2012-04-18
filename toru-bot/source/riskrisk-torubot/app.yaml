@@ -1,0 +1,88 @@
+application: riskrisk-torubot
+version: 1
+runtime: python
+api_version: 1
+
+handlers:
+
+#- url: /(.*\.egg)
+#  static_files: module/\1
+#  upload: module/(.*\.egg)
+
+- url: /tweet
+  script: main.py
+  login: admin
+
+- url: /mention
+  script: main.py
+  login: admin
+
+- url: /usercontrol
+  script: main.py
+  login: admin
+
+- url: /tweetenable
+  script: main.py
+  login: admin
+
+- url: /mergestore
+  script: main.py
+  login: admin
+
+- url: /resetstore
+  script: main.py
+  login: admin
+
+- url: /addstatus
+  script: main.py
+  login: admin
+
+- url: /delstatus
+  script: main.py
+  login: admin
+
+- url: /addomikuji
+  script: main.py
+  login: admin
+
+- url: /delomikuji
+  script: main.py
+  login: admin
+
+- url: /priostatus
+  script: main.py
+  login: admin
+
+- url: /priostatusreset
+  script: main.py
+  login: admin
+
+- url: /statuslist
+  script: main.py
+  login: admin
+
+- url: /logictest
+  script: main.py
+  login: admin
+
+- url: /tweettest
+  script: main.py
+  login: admin
+
+- url: /storetest
+  script: main.py
+  login: admin
+
+- url: /manage.html
+  static_files: static/manage.html
+  login: admin
+  upload: static/manage.html
+
+- url: /(.*\.html)
+  static_files: static/\1
+  upload: static/(.*\.html)
+
+- url: /
+  static_files: static/index.html
+  upload: static/index.html
+

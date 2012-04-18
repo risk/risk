@@ -1,0 +1,13 @@
+cron:
+-   description: update schedule
+    url: /tweet
+    schedule: every 1 minutes
+
+-   description: mention schedule
+    url: /mention
+    schedule: every 3 minutes
+
+-   description: mention schedule
+    url: /usercontrol
+    schedule: every 1 hours
+
