@@ -35,6 +35,7 @@ int main()
 {
 	TalkInterface* interface = new RenokunAdaptor();
 	interface->say();
+	delete interface;
 	return 0;
 }
 
