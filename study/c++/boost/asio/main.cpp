@@ -62,6 +62,8 @@ private:
 	bool accepted_;
 	bool connected_;
 
+	asio::streambuf receiveBuffer_;
+
 public:
 
 	TcpCallback()
@@ -77,6 +79,11 @@ public:
 	virtual bool isConnected()
 	{
 		return connected_;
+	}
+
+	virtual asio::streambuf& getReceiveBuffer()
+	{
+		return receiveBuffer_;
 	}
 
 	virtual void onConnect(const boost::system::error_code& error)
@@ -106,6 +113,43 @@ public:
 		{
 			accepted_ = true;
 			std::cout << "accepted" << std::endl;
+		}
+	}
+
+
+	virtual void onSend(
+		const boost::system::error_code& error,
+		size_t bytesTransferred)
+	{
+		std::cout << "onSend" << std::endl;
+
+		if(error)
+		{
+			std::cout << "send failed - " << error.message() << std::endl;
+		}
+		else
+		{
+			std::cout << "sent - " << bytesTransferred << "bytes" << std::endl;
+		}
+	}
+
+	virtual void onReceive(
+		const boost::system::error_code& error,
+		size_t bytesTransferred)
+	{
+		std::cout << "onReceive" << std::endl;
+
+		if(error && error != asio::error::eof)
+		{
+			std::cout << "receive failed - " << error.message() << std::endl;
+		}
+		else
+		{
+			std::cout << "rceived - " <<
+				asio::buffer_cast<const unsigned char*>(getReceiveBuffer().data()) <<
+				" / " <<
+				bytesTransferred << "bytes" << std::endl;
+			getReceiveBuffer().consume(getReceiveBuffer().size());
 		}
 	}
 };
@@ -202,6 +246,64 @@ public:
 			boost::bind(&TcpCallback::onConnect, callback_, asio::placeholders::error));
 	}
 
+	virtual bool send(const std::vector<unsigned char>& data)
+	{
+		boost::system::error_code error;
+		std::cout << "send data is -> " << &data[0] << std::endl;
+		asio::write(socket_, asio::buffer(&data[0], data.size()), error);
+		if(error)
+		{
+			std::cout << "send failed - " << error.message() << std::endl;
+			return false;
+		}
+		// sent
+		return true;
+	}
+
+	virtual bool receive(std::vector<unsigned char>& data)
+	{
+		boost::system::error_code error;
+		asio::streambuf buffer;
+		asio::read(socket_, buffer, asio::transfer_all(), error);
+		if(error && error != asio::error::eof)
+		{
+			std::cout << "receive failed - " << error.message() << std::endl;
+			return false;
+		}
+
+		data.resize(buffer.size());
+		memcpy(&data[0],
+			   asio::buffer_cast<const unsigned char*>(buffer.data()),
+			   data.size());
+
+		// sent
+		return true;
+	}
+
+	virtual void sendAsync(const std::vector<unsigned char>& data)
+	{
+		boost::system::error_code error;
+		std::cout << "async send data is -> " << &data[0] << std::endl;
+		asio::async_write(
+			socket_,
+			asio::buffer(&data[0], data.size()),
+			boost::bind(&TcpCallback::onSend, callback_,
+						asio::placeholders::error,
+						asio::placeholders::bytes_transferred));
+	}
+
+	virtual void receiveAsync()
+	{
+		boost::system::error_code error;
+		asio::async_read(
+			socket_,
+			callback_->getReceiveBuffer(),
+			asio::transfer_all(),
+			boost::bind(&TcpCallback::onReceive, callback_,
+						asio::placeholders::error,
+						asio::placeholders::bytes_transferred));
+	}
+
 };
 
 
@@ -211,6 +313,16 @@ void serverThread()
 	if(socket.accept())
 	{
 		std::cout << "server thread accepted" << std::endl;
+
+		std::vector<unsigned char> data;
+		if(socket.receive(data))
+		{
+			std::cout << "server thread received - " << &data[0] << std::endl;
+		}
+		else
+		{
+			std::cout << "server thread receive failed" << std::endl;
+		}
 	}
 	else
 	{
@@ -223,11 +335,13 @@ void asyncServerThread()
 	TcpCallback_ptr callback = boost::make_shared<TcpCallback>();
 	TcpSocket socket(40000, callback);
 	socket.acceptAsync();
-
 	while(!callback->isAccepted())
 	{
 		boost::this_thread::sleep(boost::posix_time::milliseconds(100));
 	}
+
+	socket.receiveAsync();
+	boost::this_thread::sleep(boost::posix_time::seconds(3));
 }
 
 void clientThread()
@@ -236,6 +350,23 @@ void clientThread()
 	if(socket.connect())
 	{
 		std::cout << "client thread connected" << std::endl;
+
+		boost::this_thread::sleep(boost::posix_time::milliseconds(100));
+
+		std::vector<unsigned char> data;
+		data.push_back('t');
+		data.push_back('e');
+		data.push_back('s');
+		data.push_back('t');
+		data.push_back('\0');
+		if(socket.send(data))
+		{
+			std::cout << "client thread sent" << std::endl;
+		}
+		else
+		{
+			std::cout << "client thread send failed" << std::endl;
+		}
 	}
 	else
 	{
@@ -253,23 +384,44 @@ void asyncClientThread()
 	{
 		boost::this_thread::sleep(boost::posix_time::milliseconds(100));
 	}
+
+	std::vector<unsigned char> data;
+	data.push_back('t');
+	data.push_back('e');
+	data.push_back('s');
+	data.push_back('t');
+	data.push_back('\0');
+	socket.sendAsync(data);
+	boost::this_thread::sleep(boost::posix_time::milliseconds(100));
 }
+
+#define ASYNC
 
 int main(int argc, char* argv[])
 {
+#if !defined(ASYNC)
+	std::cout << "sync server start" << std::endl;
+	boost::thread server(boost::bind(serverThread));
+	std::cout << "sync server start OK" << std::endl;
+#else
 	std::cout << "async server start" << std::endl;
-//	boost::thread server(boost::bind(serverThread));
 	boost::thread server(boost::bind(asyncServerThread));
 	std::cout << "async server start OK" << std::endl;
+#endif
 
 	std::cout << "sleep in" << std::endl;
 	boost::this_thread::sleep(boost::posix_time::seconds(1));
 	std::cout << "sleep out" << std::endl;
 
+#if !defined(ASYNC)
+	std::cout << "sync client start" << std::endl;
+	boost::thread client(boost::bind(clientThread));
+	std::cout << "sync client start OK" << std::endl;
+#else
 	std::cout << "async client start" << std::endl;
-//	boost::thread client(boost::bind(clientThread));
 	boost::thread client(boost::bind(asyncClientThread));
 	std::cout << "async client start OK" << std::endl;
+#endif
 
 	client.join();
 	server.join();
