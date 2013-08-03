@@ -52,7 +52,7 @@ class Twitter():
 
 	# メンションの取得
 	def getMentions(self):
-		userTL = self.api.mentions()
+		userTL = self.api.mentions_timeline()
 		slist=[]
 		for s in userTL:
 			slist.append((s.id, s.user.screen_name, s.text))
