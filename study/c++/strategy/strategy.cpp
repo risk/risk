@@ -1,26 +1,34 @@
 #include <iostream>
+#include <string>
 
 class Foods
 {
 private:
 
-	int amount_;
-	int quality_;
+	std::string name_;
+	double amount_;
+	double quality_;
 
 public:
 
-	Foods(int amount, int quality)
-		: amount_(amount)
+	Foods(const std::string name, double amount, double quality)
+		: name_(name)
+		, amount_(amount)
 		, quality_(quality)
 	{
 	}
 
-	virtual getAmount() const
+	virtual std::string getName() const
+	{
+		return name_;
+	}
+
+	virtual double getAmount() const
 	{
 		return amount_;
 	}
 
-	virtual getQuality()
+	virtual double getQuality() const
 	{
 		return quality_;
 	}
@@ -31,7 +39,7 @@ class FoodsComparator
 {
 public:
 
-    int compare(const Foods& lhs, const Foods& rhs) = 0;
+    virtual int compare(const Foods& lhs, const Foods& rhs) = 0;
 };
 
 class KouchanComparator
@@ -41,16 +49,13 @@ public:
 
     int compare(const Foods& lhs, const Foods& rhs)
 	{
-    int compare(const Foods& lhs, const Foods& rhs)
-	{
-		// こうちゃんは、味8割 量2割
-		int lhsValue = lhs.getAmount() / 100 * 0.8 + lhs.getAmount() * ;
-		int rhsValue = rhs.getAmount();
+		// こうちゃんは、量2割 味8割
+		double lhsValue = lhs.getAmount() * 0.2 + lhs.getQuality() * 0.8;
+		double rhsValue = rhs.getAmount() * 0.2 + rhs.getQuality() * 0.8;
 		return
 			(lhsValue == rhsValue) ? 0 :
 			(lhsValue > rhsValue) ? -1 :
 			1;
-	}
 	}
 };
 
@@ -62,9 +67,9 @@ public:
 
     int compare(const Foods& lhs, const Foods& rhs)
 	{
-		// レノくんは、味2割 量8割
-		int lhsAmount = lhs.getAmount();
-		int rhsAmount = lhs.getAmount();
+		// レノくんは、量8割 味2割
+		double lhsValue = lhs.getAmount() * 0.8 + lhs.getQuality() * 0.2;
+		double rhsValue = rhs.getAmount() * 0.8 + rhs.getQuality() * 0.2;
 		return
 			(lhsValue == rhsValue) ? 0 :
 			(lhsValue > rhsValue) ? -1 :
@@ -72,11 +77,50 @@ public:
 	}
 };
 
+class LanchMenu
+{
+private:
+	FoodsComparator* comparator_;
+	Foods aLanch_;
+	Foods bLanch_;
+	Foods uraLanch_;
+public:
+
+	LanchMenu(FoodsComparator* comparator)
+	    : comparator_(comparator)  
+		, aLanch_("A Lanch", 100, 50)
+		, bLanch_("B Lanch", 50, 100)
+		, uraLanch_("Ura Lanch", 100, 100)
+	{
+	}
+	virtual Foods provide()
+	{
+		if(comparator_->compare(aLanch_, bLanch_) == -1) {
+			return aLanch_;
+		}
+		else if(comparator_->compare(aLanch_, bLanch_) == 1) {
+			return bLanch_;
+		}
+		return uraLanch_;
+	}
+	
+};
 
 int main()
 {
-
-
+	{
+		KouchanComparator* kouchanComparator = new KouchanComparator;
+		LanchMenu lanchMenu(kouchanComparator);
+		std::cout << lanchMenu.provide().getName() << std::endl;
+		delete kouchanComparator;
+	}
+		
+	{
+		LenokunComparator* lenokunComparator = new LenokunComparator;
+		LanchMenu lanchMenu(lenokunComparator);
+		std::cout << lanchMenu.provide().getName() << std::endl;
+		delete lenokunComparator;
+	}
 
 	return 0;
 }
