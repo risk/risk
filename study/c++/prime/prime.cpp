@@ -1,5 +1,6 @@
 #include <iostream>
 #include <list>
+#include <boost/foreach.hpp>
 #include <boost/format.hpp>
 #include <sys/time.h>
 
@@ -12,8 +13,8 @@ int main()
 
 	for(int i = 1; i < 10000; ++i) {
 		bool divided = false;
-		for(int j = 2; j < i; ++j) {
-			if( i % j == 0) {
+		BOOST_FOREACH(const int& p, prime) {
+			if(p != 1 && i % p == 0) {
 				divided = true;
 				break;
 			}
@@ -24,6 +25,11 @@ int main()
 	}
 
 	gettimeofday(&end, NULL);
+
+	BOOST_FOREACH(const int& p, prime) {
+		std::cout << p << ", ";
+	}
+	std::cout << std::endl;
 
 	int result = ((end.tv_sec - start.tv_sec) * 1000000 + end.tv_usec) - start.tv_usec;
 	std::cout
