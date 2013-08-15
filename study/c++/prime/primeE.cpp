@@ -15,16 +15,14 @@ int main()
 
 	std::vector<bool> numbers(number_max + 1, false);
 
-	for(int i = 1; i < number_max; ++i) {
+	for(int i = 2; i <= number_max; ++i) {
 		if(numbers[i]) {
 			continue;
 		}
 
-		if(i != 1) {
-			for(int remove = i * 2; remove < number_max; remove += i) {
-				numbers[remove] = true;
-			}
-		} 
+		for(int remove = i * 2; remove <= number_max; remove += i) {
+			numbers[remove] = true;
+		}
 		prime.push_back(i);
 	}
 

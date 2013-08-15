@@ -11,10 +11,10 @@ int main()
 
 	gettimeofday(&start, NULL);
 
-	for(int i = 1; i < 10000; ++i) {
+	for(int i = 2; i <= 10000; ++i) {
 		bool divided = false;
 		BOOST_FOREACH(const int& p, prime) {
-			if(p != 1 && i % p == 0) {
+			if(i % p == 0) {
 				divided = true;
 				break;
 			}

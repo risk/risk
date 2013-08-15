@@ -10,7 +10,7 @@ int main()
 
 	gettimeofday(&start, NULL);
 
-	for(int i = 1; i < 10000; ++i) {
+	for(int i = 2; i <= 10000; ++i) {
 		bool divided = false;
 		for(int j = 2; j < i; ++j) {
 			if( i % j == 0) {
