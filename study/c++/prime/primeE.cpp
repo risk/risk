@@ -21,7 +21,7 @@ int main()
 		}
 
 		if(i != 1) {
-			for(int remove = i; remove < number_max; remove += i) {
+			for(int remove = i * 2; remove < number_max; remove += i) {
 				numbers[remove] = true;
 			}
 		} 
